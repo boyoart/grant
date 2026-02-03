@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Package, ArrowRight, ShoppingBag } from "lucide-react";
+import { Package, ArrowRight, ShoppingBag, Upload } from "lucide-react";
 import { getMyOrders } from "../../lib/api";
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
