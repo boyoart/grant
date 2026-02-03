@@ -114,9 +114,10 @@ const CheckoutPage = () => {
       };
 
       const response = await createOrder(orderData);
+      const orderNum = response.data.order.order_number;
       clearCart();
-      navigate("/order/" + response.data.order.order_number);
       toast.success("Order placed successfully!");
+      navigate("/order/" + orderNum);
     } catch (error) {
       console.error("Error creating order:", error);
       const errorMsg = error.response && error.response.data ? error.response.data.detail : "Failed to place order";
