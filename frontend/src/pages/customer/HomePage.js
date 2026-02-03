@@ -1,29 +1,27 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, Truck, Store, Leaf } from "lucide-react";
-import { getCategories, getProducts, seedData } from "../../lib/api";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Truck, Store, Leaf, Search, X } from "lucide-react";
+import { getCategories, getProducts } from "../../lib/api";
 import { formatCurrency } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Skeleton } from "../../components/ui/skeleton";
+import { Input } from "../../components/ui/input";
 import { useCart } from "../../context/CartContext";
 import { toast } from "sonner";
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const { addItem } = useCart();
 
   useEffect(() => {
     const init = async () => {
-      try {
-        // Seed data on first load
-        await seedData();
-      } catch (e) {
-        // Ignore if already seeded
-      }
-      
       try {
         const [catRes, prodRes] = await Promise.all([
           getCategories(),
@@ -40,6 +38,31 @@ const HomePage = () => {
     };
     init();
   }, []);
+
+  // Search products with debounce
+  useEffect(() => {
+    const searchTimer = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          const res = await getProducts(null, searchQuery.trim());
+          setSearchResults(res.data);
+        } catch (error) {
+          console.error("Search error:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(searchTimer);
+  }, [searchQuery]);
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+  };
 
   const handleAddToCart = (product) => {
     if (product.stock_quantity <= 0) {
