@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Eye, ChevronDown, Truck, Store } from "lucide-react";
+import { Search, Eye, Truck, Store } from "lucide-react";
 import { adminGetOrders, updateOrderStatus } from "../../lib/api";
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor, getNextStatuses } from "../../lib/utils";
 import { Card } from "../../components/ui/card";
@@ -25,19 +25,29 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [statusUpdate, setStatusUpdate] = useState({
-    status: "",
-    logistics_name: "",
-    logistics_phone: "",
-    admin_notes: ""
-  });
+  const [newStatus, setNewStatus] = useState("");
+  const [logisticsName, setLogisticsName] = useState("");
+  const [logisticsPhone, setLogisticsPhone] = useState("");
+  const [adminNotes, setAdminNotes] = useState("");
 
   useEffect(() => {
     loadOrders();
   }, []);
 
   useEffect(() => {
-    filterOrders();
+    let filtered = orders;
+    if (statusFilter) {
+      filtered = filtered.filter(o => o.status === statusFilter);
+    }
+    if (search) {
+      const s = search.toLowerCase();
+      filtered = filtered.filter(o => 
+        o.order_number.toLowerCase().includes(s) ||
+        o.customer_name.toLowerCase().includes(s) ||
+        o.customer_phone.includes(search)
+      );
+    }
+    setFilteredOrders(filtered);
   }, [orders, search, statusFilter]);
 
   const loadOrders = async () => {
@@ -52,25 +62,6 @@ const AdminOrders = () => {
     }
   };
 
-  const filterOrders = () => {
-    let filtered = [...orders];
-    
-    if (statusFilter) {
-      filtered = filtered.filter(o => o.status === statusFilter);
-    }
-    
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(o => 
-        o.order_number.toLowerCase().includes(searchLower) ||
-        o.customer_name.toLowerCase().includes(searchLower) ||
-        o.customer_phone.includes(search)
-      );
-    }
-    
-    setFilteredOrders(filtered);
-  };
-
   const handleStatusFilterChange = (value) => {
     if (value === "all") {
       searchParams.delete("status");
@@ -82,31 +73,27 @@ const AdminOrders = () => {
 
   const openOrderModal = (order) => {
     setSelectedOrder(order);
-    setStatusUpdate({
-      status: "",
-      logistics_name: order.logistics_name || "",
-      logistics_phone: order.logistics_phone || "",
-      admin_notes: order.admin_notes || ""
-    });
+    setNewStatus("");
+    setLogisticsName(order.logistics_name || "");
+    setLogisticsPhone(order.logistics_phone || "");
+    setAdminNotes(order.admin_notes || "");
     setShowOrderModal(true);
   };
 
   const handleUpdateStatus = async () => {
-    if (!statusUpdate.status) {
+    if (!newStatus) {
       toast.error("Please select a status");
       return;
     }
-
     setUpdatingStatus(true);
     try {
       await updateOrderStatus(selectedOrder.id, {
-        status: statusUpdate.status,
-        logistics_name: statusUpdate.logistics_name,
-        logistics_phone: statusUpdate.logistics_phone,
-        admin_notes: statusUpdate.admin_notes
+        status: newStatus,
+        logistics_name: logisticsName,
+        logistics_phone: logisticsPhone,
+        admin_notes: adminNotes
       });
-      
-      toast.success(`Order status updated to ${getStatusLabel(statusUpdate.status)}`);
+      toast.success("Order status updated to " + getStatusLabel(newStatus));
       setShowOrderModal(false);
       loadOrders();
     } catch (error) {
@@ -124,8 +111,6 @@ const AdminOrders = () => {
     { value: "packing", label: "Packing" },
     { value: "ready_for_pickup", label: "Ready for Pickup" },
     { value: "out_for_delivery", label: "Out for Delivery" },
-    { value: "picked_up", label: "Picked Up" },
-    { value: "delivered", label: "Delivered" },
     { value: "completed", label: "Completed" },
     { value: "cancelled", label: "Cancelled" }
   ];
@@ -142,7 +127,7 @@ const AdminOrders = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="font-['Playfair_Display'] text-2xl md:text-3xl font-bold text-[#1A202C]">
+        <h1 className="font-serif text-2xl md:text-3xl font-bold text-stone-800">
           Orders
         </h1>
         <div className="flex gap-3">
@@ -171,19 +156,18 @@ const AdminOrders = () => {
         </div>
       </div>
 
-      {/* Orders Table */}
       <Card className="bg-white border border-stone-200 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full admin-table">
-            <thead>
+          <table className="w-full">
+            <thead className="bg-stone-50">
               <tr>
-                <th className="px-4 py-3">Order</th>
-                <th className="px-4 py-3">Customer</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Total</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Actions</th>
+                <th className="px-4 py-3 text-left font-semibold text-stone-700">Order</th>
+                <th className="px-4 py-3 text-left font-semibold text-stone-700">Customer</th>
+                <th className="px-4 py-3 text-left font-semibold text-stone-700">Type</th>
+                <th className="px-4 py-3 text-left font-semibold text-stone-700">Total</th>
+                <th className="px-4 py-3 text-left font-semibold text-stone-700">Status</th>
+                <th className="px-4 py-3 text-left font-semibold text-stone-700">Date</th>
+                <th className="px-4 py-3 text-left font-semibold text-stone-700">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -195,35 +179,35 @@ const AdminOrders = () => {
                 </tr>
               ) : (
                 filteredOrders.map((order) => (
-                  <tr key={order.id} data-testid={`order-row-${order.order_number}`}>
+                  <tr key={order.id} className="border-b border-stone-100 hover:bg-stone-50" data-testid={"order-row-" + order.order_number}>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-[#1A202C]">{order.order_number}</p>
+                      <p className="font-medium text-stone-800">{order.order_number}</p>
                       <p className="text-xs text-stone-500">{order.items.length} items</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-[#1A202C]">{order.customer_name}</p>
+                      <p className="text-stone-800">{order.customer_name}</p>
                       <p className="text-xs text-stone-500">{order.customer_phone}</p>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {order.fulfillment_type === "pickup" ? (
-                          <>
+                          <React.Fragment>
                             <Store className="w-4 h-4 text-stone-500" />
                             <span className="text-sm">Pickup</span>
-                          </>
+                          </React.Fragment>
                         ) : (
-                          <>
+                          <React.Fragment>
                             <Truck className="w-4 h-4 text-stone-500" />
                             <span className="text-sm">Delivery</span>
-                          </>
+                          </React.Fragment>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-semibold text-[#1B4D3E]">
+                    <td className="px-4 py-3 font-semibold text-emerald-800">
                       {formatCurrency(order.total)}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge className={`${getStatusColor(order.status)} text-xs`}>
+                      <Badge className={getStatusColor(order.status) + " text-xs"}>
                         {getStatusLabel(order.status)}
                       </Badge>
                     </td>
@@ -235,8 +219,8 @@ const AdminOrders = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => openOrderModal(order)}
-                        className="text-[#1B4D3E] border-[#1B4D3E]"
-                        data-testid={`view-order-${order.order_number}`}
+                        className="text-emerald-800 border-emerald-800"
+                        data-testid={"view-order-" + order.order_number}
                       >
                         <Eye className="w-4 h-4 mr-1" />
                         View
@@ -250,46 +234,42 @@ const AdminOrders = () => {
         </div>
       </Card>
 
-      {/* Order Details Modal */}
       <Dialog open={showOrderModal} onOpenChange={setShowOrderModal}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-['Playfair_Display'] text-xl">
-              Order Details - {selectedOrder?.order_number}
+            <DialogTitle className="font-serif text-xl">
+              Order Details - {selectedOrder ? selectedOrder.order_number : ""}
             </DialogTitle>
           </DialogHeader>
 
           {selectedOrder && (
             <div className="space-y-6">
-              {/* Status */}
               <div className="flex items-center justify-between p-4 bg-stone-50 rounded-lg">
                 <div>
                   <p className="text-sm text-stone-500">Current Status</p>
-                  <Badge className={`${getStatusColor(selectedOrder.status)} mt-1`}>
+                  <Badge className={getStatusColor(selectedOrder.status) + " mt-1"}>
                     {getStatusLabel(selectedOrder.status)}
                   </Badge>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-stone-500">Order Total</p>
-                  <p className="text-xl font-bold text-[#1B4D3E]">
+                  <p className="text-xl font-bold text-emerald-800">
                     {formatCurrency(selectedOrder.total)}
                   </p>
                 </div>
               </div>
 
-              {/* Customer Info */}
               <div>
-                <h3 className="font-semibold text-[#1A202C] mb-2">Customer</h3>
+                <h3 className="font-semibold text-stone-800 mb-2">Customer</h3>
                 <p>{selectedOrder.customer_name}</p>
                 <p className="text-stone-500">{selectedOrder.customer_phone}</p>
               </div>
 
-              {/* Fulfillment */}
               <div>
-                <h3 className="font-semibold text-[#1A202C] mb-2">Fulfillment</h3>
+                <h3 className="font-semibold text-stone-800 mb-2">Fulfillment</h3>
                 {selectedOrder.fulfillment_type === "pickup" ? (
                   <div className="flex items-center gap-2">
-                    <Store className="w-5 h-5 text-[#1B4D3E]" />
+                    <Store className="w-5 h-5 text-emerald-800" />
                     <div>
                       <p>Store Pickup</p>
                       {selectedOrder.pickup_time && (
@@ -299,21 +279,17 @@ const AdminOrders = () => {
                   </div>
                 ) : (
                   <div className="flex items-start gap-2">
-                    <Truck className="w-5 h-5 text-[#1B4D3E] mt-0.5" />
+                    <Truck className="w-5 h-5 text-emerald-800 mt-0.5" />
                     <div>
                       <p>Delivery to {selectedOrder.delivery_zone_name}</p>
                       <p className="text-sm text-stone-500">{selectedOrder.delivery_address}</p>
-                      {selectedOrder.delivery_note && (
-                        <p className="text-sm text-stone-400 italic">Note: {selectedOrder.delivery_note}</p>
-                      )}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Items */}
               <div>
-                <h3 className="font-semibold text-[#1A202C] mb-2">Items</h3>
+                <h3 className="font-semibold text-stone-800 mb-2">Items</h3>
                 <div className="space-y-2">
                   {selectedOrder.items.map((item, index) => (
                     <div key={index} className="flex justify-between py-2 border-b border-stone-100 last:border-0">
@@ -327,38 +303,19 @@ const AdminOrders = () => {
                   </div>
                   <div className="flex justify-between pt-2 font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-[#1B4D3E]">{formatCurrency(selectedOrder.total)}</span>
+                    <span className="text-emerald-800">{formatCurrency(selectedOrder.total)}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Payment Proof */}
-              {selectedOrder.payment_proof_url && (
-                <div>
-                  <h3 className="font-semibold text-[#1A202C] mb-2">Payment Proof</h3>
-                  <a 
-                    href={selectedOrder.payment_proof_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-[#1B4D3E] hover:underline"
-                  >
-                    View uploaded proof
-                  </a>
-                </div>
-              )}
-
-              {/* Update Status */}
               {getNextStatuses(selectedOrder.status, selectedOrder.fulfillment_type).length > 0 && (
                 <div className="border-t border-stone-200 pt-6">
-                  <h3 className="font-semibold text-[#1A202C] mb-4">Update Status</h3>
+                  <h3 className="font-semibold text-stone-800 mb-4">Update Status</h3>
                   
                   <div className="space-y-4">
                     <div>
                       <Label>New Status</Label>
-                      <Select 
-                        value={statusUpdate.status} 
-                        onValueChange={(value) => setStatusUpdate(prev => ({ ...prev, status: value }))}
-                      >
+                      <Select value={newStatus} onValueChange={setNewStatus}>
                         <SelectTrigger className="mt-1" data-testid="update-status-select">
                           <SelectValue placeholder="Select new status" />
                         </SelectTrigger>
@@ -372,13 +329,13 @@ const AdminOrders = () => {
                       </Select>
                     </div>
 
-                    {statusUpdate.status === "out_for_delivery" && (
-                      <>
+                    {newStatus === "out_for_delivery" && (
+                      <React.Fragment>
                         <div>
                           <Label>Rider Name</Label>
                           <Input
-                            value={statusUpdate.logistics_name}
-                            onChange={(e) => setStatusUpdate(prev => ({ ...prev, logistics_name: e.target.value }))}
+                            value={logisticsName}
+                            onChange={(e) => setLogisticsName(e.target.value)}
                             placeholder="Enter rider's name"
                             className="mt-1"
                             data-testid="logistics-name"
@@ -387,22 +344,22 @@ const AdminOrders = () => {
                         <div>
                           <Label>Rider Phone</Label>
                           <Input
-                            value={statusUpdate.logistics_phone}
-                            onChange={(e) => setStatusUpdate(prev => ({ ...prev, logistics_phone: e.target.value }))}
+                            value={logisticsPhone}
+                            onChange={(e) => setLogisticsPhone(e.target.value)}
                             placeholder="Enter rider's phone"
                             className="mt-1"
                             data-testid="logistics-phone"
                           />
                         </div>
-                      </>
+                      </React.Fragment>
                     )}
 
                     <div>
                       <Label>Admin Notes (Optional)</Label>
                       <Textarea
-                        value={statusUpdate.admin_notes}
-                        onChange={(e) => setStatusUpdate(prev => ({ ...prev, admin_notes: e.target.value }))}
-                        placeholder="Add internal notes about this order"
+                        value={adminNotes}
+                        onChange={(e) => setAdminNotes(e.target.value)}
+                        placeholder="Add internal notes"
                         className="mt-1"
                         rows={2}
                         data-testid="admin-notes"
@@ -411,8 +368,8 @@ const AdminOrders = () => {
 
                     <Button
                       onClick={handleUpdateStatus}
-                      disabled={updatingStatus || !statusUpdate.status}
-                      className="w-full bg-[#1B4D3E] hover:bg-[#153d31] text-white"
+                      disabled={updatingStatus || !newStatus}
+                      className="w-full bg-emerald-800 hover:bg-emerald-900 text-white"
                       data-testid="update-status-btn"
                     >
                       {updatingStatus ? "Updating..." : "Update Status"}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Check, Copy, Clock, Store, Truck, CreditCard } from "lucide-react";
 import { getOrder, getSettings } from "../../lib/api";
