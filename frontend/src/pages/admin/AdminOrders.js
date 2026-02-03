@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Eye, Truck, Store } from "lucide-react";
+import { Search, Eye, Truck, Store, FileText, Image as ImageIcon, ExternalLink } from "lucide-react";
 import { adminGetOrders, updateOrderStatus } from "../../lib/api";
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor, getNextStatuses } from "../../lib/utils";
 import { Card } from "../../components/ui/card";
