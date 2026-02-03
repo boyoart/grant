@@ -60,7 +60,7 @@ const CheckoutPage = () => {
       }
     };
     loadData();
-  }, [items.length, navigate, customer]);
+  }, [items.length, navigate, customer, isLoaded]);
 
   const subtotal = getSubtotal();
   const selectedZone = deliveryZones.find(z => z.id === deliveryZoneId);
