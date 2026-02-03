@@ -9,34 +9,102 @@ import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
 import { toast } from "sonner";
 
+function OrderItem({ item }) {
+  return (
+    <div className="flex justify-between text-sm py-2 border-b border-stone-100">
+      <span className="text-stone-600">{item.quantity}x {item.product_name}</span>
+      <span className="font-medium text-stone-800">{formatCurrency(item.price * item.quantity)}</span>
+    </div>
+  );
+}
+
+function PaymentCard({ order, settings, onCopy }) {
+  const bankName = settings.bank_name || "First Bank";
+  const accountNum = settings.account_number || "3012345678";
+  const accountName = settings.account_name || "FoodNova Enterprises";
+
+  return (
+    <Card className="p-6 bg-white border-2 border-amber-200 rounded-2xl mb-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+          <CreditCard className="w-5 h-5 text-amber-600" />
+        </div>
+        <h2 className="font-semibold text-lg text-stone-800">Payment Instructions</h2>
+      </div>
+
+      <div className="bg-amber-50 rounded-xl p-4 mb-4">
+        <p className="text-amber-800 text-sm">Transfer to the account below using your Order ID as reference.</p>
+      </div>
+
+      <div className="space-y-4">
+        <div className="p-4 bg-stone-50 rounded-xl">
+          <p className="text-sm text-stone-500">Bank Name</p>
+          <p className="font-semibold text-stone-800">{bankName}</p>
+        </div>
+
+        <div className="flex justify-between items-center p-4 bg-stone-50 rounded-xl">
+          <div>
+            <p className="text-sm text-stone-500">Account Number</p>
+            <p className="font-semibold text-stone-800 text-lg">{accountNum}</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => onCopy(accountNum)} data-testid="copy-account-btn">
+            <Copy className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <div className="p-4 bg-stone-50 rounded-xl">
+          <p className="text-sm text-stone-500">Account Name</p>
+          <p className="font-semibold text-stone-800">{accountName}</p>
+        </div>
+
+        <div className="p-4 bg-emerald-50 rounded-xl border-2 border-emerald-200">
+          <p className="text-sm text-emerald-700">Amount to Pay</p>
+          <p className="font-bold text-emerald-800 text-2xl">{formatCurrency(order.total)}</p>
+        </div>
+
+        <div className="flex justify-between items-center p-4 bg-orange-50 rounded-xl border-2 border-orange-200">
+          <div>
+            <p className="text-sm text-orange-700">Transfer Reference</p>
+            <p className="font-bold text-orange-800 text-xl">{order.order_number}</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => onCopy(order.order_number)} data-testid="copy-order-btn">
+            <Copy className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+      <p className="text-sm text-stone-500 mt-4 text-center">We'll confirm once payment is verified.</p>
+    </Card>
+  );
+}
+
 function OrderConfirmationPage() {
-  const { orderNumber } = useParams();
+  const params = useParams();
+  const orderNumber = params.orderNumber;
   const [order, setOrder] = useState(null);
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    async function loadData() {
+    async function load() {
       try {
-        const orderRes = await getOrder(orderNumber);
-        const settingsRes = await getSettings();
+        const [orderRes, settingsRes] = await Promise.all([
+          getOrder(orderNumber),
+          getSettings()
+        ]);
         setOrder(orderRes.data);
         setSettings(settingsRes.data);
-      } catch (error) {
+      } catch (e) {
         toast.error("Order not found");
       } finally {
         setLoading(false);
       }
     }
-    loadData();
+    load();
   }, [orderNumber]);
 
   function copyText(text) {
     navigator.clipboard.writeText(text);
-    setCopied(true);
-    toast.success("Copied");
-    setTimeout(function() { setCopied(false); }, 2000);
+    toast.success("Copied!");
   }
 
   if (loading) {
@@ -52,21 +120,17 @@ function OrderConfirmationPage() {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-2xl font-bold text-stone-800 mb-4">Order Not Found</h1>
-        <Link to="/">
-          <Button className="bg-emerald-800 hover:bg-emerald-900 text-white">Back to Home</Button>
-        </Link>
+        <Link to="/"><Button className="bg-emerald-800 hover:bg-emerald-900 text-white">Back to Home</Button></Link>
       </div>
     );
   }
 
   const isPending = order.status === "pending_payment";
-  const bankName = settings ? (settings.bank_name || "First Bank") : "First Bank";
-  const accountNum = settings ? (settings.account_number || "3012345678") : "3012345678";
-  const accountName = settings ? (settings.account_name || "FoodNova Enterprises") : "FoodNova Enterprises";
+  const isPickup = order.fulfillment_type === "pickup";
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
-      {isPending ? (
+      {isPending && (
         <Card className="p-6 bg-emerald-800 text-white rounded-2xl mb-6 text-center">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8" />
@@ -74,7 +138,9 @@ function OrderConfirmationPage() {
           <h1 className="font-serif text-2xl md:text-3xl font-bold mb-2">Order Placed!</h1>
           <p className="text-white/80">Please complete payment</p>
         </Card>
-      ) : (
+      )}
+
+      {!isPending && (
         <Card className="p-6 bg-white border border-stone-200 rounded-2xl mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -86,91 +152,33 @@ function OrderConfirmationPage() {
         </Card>
       )}
 
-      {isPending && settings ? (
-        <Card className="p-6 bg-white border-2 border-amber-200 rounded-2xl mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-amber-600" />
-            </div>
-            <h2 className="font-semibold text-lg text-stone-800">Payment Instructions</h2>
-          </div>
-
-          <div className="bg-amber-50 rounded-xl p-4 mb-4">
-            <p className="text-amber-800 text-sm">Transfer to the account below using your Order ID as reference.</p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="p-4 bg-stone-50 rounded-xl">
-              <p className="text-sm text-stone-500">Bank Name</p>
-              <p className="font-semibold text-stone-800">{bankName}</p>
-            </div>
-
-            <div className="flex justify-between items-center p-4 bg-stone-50 rounded-xl">
-              <div>
-                <p className="text-sm text-stone-500">Account Number</p>
-                <p className="font-semibold text-stone-800 text-lg">{accountNum}</p>
-              </div>
-              <Button variant="outline" size="sm" onClick={function() { copyText(accountNum); }} data-testid="copy-account-btn">
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              </Button>
-            </div>
-
-            <div className="p-4 bg-stone-50 rounded-xl">
-              <p className="text-sm text-stone-500">Account Name</p>
-              <p className="font-semibold text-stone-800">{accountName}</p>
-            </div>
-
-            <div className="p-4 bg-emerald-50 rounded-xl border-2 border-emerald-200">
-              <p className="text-sm text-emerald-700">Amount to Pay</p>
-              <p className="font-bold text-emerald-800 text-2xl">{formatCurrency(order.total)}</p>
-            </div>
-
-            <div className="flex justify-between items-center p-4 bg-orange-50 rounded-xl border-2 border-orange-200">
-              <div>
-                <p className="text-sm text-orange-700">Transfer Reference</p>
-                <p className="font-bold text-orange-800 text-xl">{order.order_number}</p>
-              </div>
-              <Button variant="outline" size="sm" onClick={function() { copyText(order.order_number); }} data-testid="copy-order-btn">
-                <Copy className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-          <p className="text-sm text-stone-500 mt-4 text-center">We'll confirm once payment is verified.</p>
-        </Card>
-      ) : null}
+      {isPending && settings && <PaymentCard order={order} settings={settings} onCopy={copyText} />}
 
       <Card className="p-6 bg-white border border-stone-200 rounded-2xl mb-6">
         <h2 className="font-semibold text-lg text-stone-800 mb-4">Order Details</h2>
 
         <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl mb-4">
-          {order.fulfillment_type === "pickup" ? (
-            <React.Fragment>
+          {isPickup ? (
+            <>
               <Store className="w-5 h-5 text-emerald-800" />
               <div>
                 <p className="font-medium text-stone-800">Store Pickup</p>
                 <p className="text-sm text-stone-500">{order.pickup_time || "Time TBD"}</p>
               </div>
-            </React.Fragment>
+            </>
           ) : (
-            <React.Fragment>
+            <>
               <Truck className="w-5 h-5 text-emerald-800" />
               <div>
                 <p className="font-medium text-stone-800">Delivery to {order.delivery_zone_name}</p>
                 <p className="text-sm text-stone-500">{order.delivery_address}</p>
               </div>
-            </React.Fragment>
+            </>
           )}
         </div>
 
-        <div className="space-y-3 mb-4">
-          {order.items.map(function(item, i) {
-            return (
-              <div key={i} className="flex justify-between text-sm py-2 border-b border-stone-100">
-                <span className="text-stone-600">{item.quantity}x {item.product_name}</span>
-                <span className="font-medium text-stone-800">{formatCurrency(item.price * item.quantity)}</span>
-              </div>
-            );
-          })}
+        <div className="space-y-1 mb-4">
+          {order.items.map((item, i) => <OrderItem key={i} item={item} />)}
         </div>
 
         <div className="border-t border-stone-200 pt-4 space-y-2">
@@ -191,8 +199,8 @@ function OrderConfirmationPage() {
 
       <Card className="p-6 bg-white border border-stone-200 rounded-2xl mb-6">
         <h2 className="font-semibold text-lg text-stone-800 mb-4">Customer</h2>
-        <p className="text-stone-600"><span className="font-medium text-stone-800">Name:</span> {order.customer_name}</p>
-        <p className="text-stone-600"><span className="font-medium text-stone-800">Phone:</span> {order.customer_phone}</p>
+        <p className="text-stone-600">Name: {order.customer_name}</p>
+        <p className="text-stone-600">Phone: {order.customer_phone}</p>
       </Card>
 
       <div className="flex flex-col sm:flex-row gap-3">
