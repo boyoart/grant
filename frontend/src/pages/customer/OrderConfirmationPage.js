@@ -14,6 +14,8 @@ const OrderConfirmationPage = () => {
   const [order, setOrder] = useState(null);
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -36,6 +38,36 @@ const OrderConfirmationPage = () => {
   const copyText = (text) => {
     navigator.clipboard.writeText(text);
     toast.success("Copied!");
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Only JPG, PNG, and PDF files are allowed");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const res = await uploadPaymentProof(order.id, file);
+      setOrder({ ...order, payment_proof_url: res.data.payment_proof_url });
+      toast.success("Payment proof uploaded successfully!");
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload payment proof");
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {
