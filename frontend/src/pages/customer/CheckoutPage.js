@@ -119,6 +119,7 @@ const CheckoutPage = () => {
 
       const response = await createOrder(orderData);
       const orderNum = response.data.order.order_number;
+      setOrderSubmitted(true);
       clearCart();
       toast.success("Order placed successfully!");
       navigate("/order/" + orderNum);
