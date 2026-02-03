@@ -106,6 +106,69 @@ const HomePage = () => {
             <p className="text-white/80 text-base md:text-lg mb-6">
               Your trusted source for premium rice, beans, oils, and spices in Lagos. Fresh from the market to your door.
             </p>
+            
+            {/* Search Bar */}
+            <div className="relative mb-6">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                <Input
+                  type="text"
+                  placeholder="Search for rice, beans, oil..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-10 py-3 h-12 rounded-full bg-white text-stone-800 border-0 focus:ring-2 focus:ring-[#C05621]"
+                  data-testid="search-input"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={clearSearch}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                    data-testid="clear-search-btn"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+              
+              {/* Search Results Dropdown */}
+              {searchQuery.trim().length >= 2 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-stone-200 max-h-80 overflow-y-auto z-50">
+                  {isSearching ? (
+                    <div className="p-4 text-center text-stone-500">Searching...</div>
+                  ) : searchResults.length > 0 ? (
+                    <div className="py-2">
+                      {searchResults.map((product) => (
+                        <div
+                          key={product.id}
+                          onClick={() => {
+                            navigate(`/product/${product.id}`);
+                            clearSearch();
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 cursor-pointer"
+                          data-testid={`search-result-${product.id}`}
+                        >
+                          <img
+                            src={product.image_url || "https://images.unsplash.com/photo-1613758235256-43a7bdc21d82?w=60&h=60&fit=crop"}
+                            alt={product.name}
+                            className="w-12 h-12 rounded-lg object-cover"
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium text-stone-800">{product.name}</p>
+                            <p className="text-sm text-[#1B4D3E] font-semibold">{formatCurrency(product.price)}</p>
+                          </div>
+                          {product.stock_quantity <= 0 && (
+                            <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">Out of Stock</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-stone-500">No products found for "{searchQuery}"</div>
+                  )}
+                </div>
+              )}
+            </div>
+            
             <div className="flex flex-wrap gap-3">
               <Link to="/category/all">
                 <Button 
