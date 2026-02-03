@@ -3,14 +3,31 @@ import { createContext, useContext, useState, useEffect } from "react";
 const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
-  const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem("foodnova_cart");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [items, setItems] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // Load cart from localStorage on mount
   useEffect(() => {
-    localStorage.setItem("foodnova_cart", JSON.stringify(items));
-  }, [items]);
+    try {
+      const saved = localStorage.getItem("foodnova_cart");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setItems(parsed);
+        }
+      }
+    } catch (e) {
+      console.error("Error loading cart:", e);
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Save cart to localStorage when items change (but only after initial load)
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem("foodnova_cart", JSON.stringify(items));
+    }
+  }, [items, isLoaded]);
 
   const addItem = (product, quantity = 1) => {
     setItems(prev => {
