@@ -1,0 +1,139 @@
+{
+  "brand_identity": {
+    "name": "FoodNova",
+    "archetype": "Organic & Earthy",
+    "vibe": "Trustworthy, Fresh, Local, Accessible, Premium",
+    "core_values": ["Freshness", "Authenticity", "Convenience"],
+    "theme_mode": "light"
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Playfair Display, serif",
+      "usage": "Headings (h1-h3), Hero Text",
+      "weights": ["600", "700"],
+      "tracking": "tracking-tight"
+    },
+    "body": {
+      "font_family": "Manrope, sans-serif",
+      "usage": "Body text, UI elements, Buttons",
+      "weights": ["400", "500", "600"],
+      "tracking": "tracking-normal"
+    },
+    "google_fonts_import": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+  },
+  "colors": {
+    "primary": {
+      "name": "Nigerian Forest",
+      "hex": "#1B4D3E",
+      "tailwind": "bg-[#1B4D3E] text-white",
+      "usage": "Primary Buttons, Active States, Brand Headers"
+    },
+    "secondary": {
+      "name": "Terracotta Clay",
+      "hex": "#C05621",
+      "tailwind": "bg-[#C05621] text-white",
+      "usage": "Accents, Sale Tags, Secondary Actions"
+    },
+    "background": {
+      "name": "Bone White",
+      "hex": "#F9F7F2",
+      "tailwind": "bg-[#F9F7F2]",
+      "usage": "Main Background (Soft, not harsh white)"
+    },
+    "surface": {
+      "name": "Warm Card",
+      "hex": "#FFFFFF",
+      "tailwind": "bg-white",
+      "usage": "Cards, Modals, Input Backgrounds"
+    },
+    "accent": {
+      "name": "Golden Harvest",
+      "hex": "#D69E2E",
+      "tailwind": "bg-[#D69E2E] text-black",
+      "usage": "Highlights, Stars, 'New' Badges"
+    },
+    "text": {
+      "primary": "#1A202C",
+      "secondary": "#4A5568",
+      "muted": "#718096"
+    }
+  },
+  "layout_strategy": {
+    "mobile_first": true,
+    "container_padding": "p-4 md:p-8 lg:p-12",
+    "grid_system": {
+      "marketing": "Bento Grid (Asymmetric)",
+      "product_list": "Grid (2 columns mobile, 4 columns desktop)",
+      "dashboard": "Dense Grid (Sidebar + Content)"
+    },
+    "navigation": {
+      "mobile": "Sticky Bottom Navigation Bar (Home, Cart, Orders, Profile)",
+      "desktop": "Top Navigation Bar with Mega Menu"
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "Pill-shaped or Soft Rounded (rounded-lg)",
+      "animation": "transform active:scale-95 transition-transform duration-100"
+    },
+    "cards": {
+      "style": "Flat with subtle border (border-stone-200) or Soft Shadow (shadow-sm)",
+      "hover": "hover:shadow-md transition-shadow duration-200"
+    },
+    "inputs": {
+      "style": "Shadcn Input with custom focus ring (ring-offset-0 ring-[#1B4D3E])",
+      "background": "bg-white"
+    }
+  },
+  "visual_enhancers": {
+    "textures": "Subtle grain overlay on hero sections",
+    "shadows": "Soft, diffuse shadows (shadow-[0_4px_20px_rgba(0,0,0,0.05)])",
+    "borders": "1px solid #E2E8F0 (Light Grey) for structure"
+  },
+  "image_assets": {
+    "categories": {
+      "rice": {
+        "url": "https://images.unsplash.com/photo-1586201375761-83865001e31c",
+        "alt": "Premium Rice Grains"
+      },
+      "beans": {
+        "url": "https://images.unsplash.com/photo-1763368397625-32c8f75fed44",
+        "alt": "Red Kidney Beans"
+      },
+      "oil": {
+        "url": "https://images.unsplash.com/photo-1757801333068-d52a3e448cde",
+        "alt": "Golden Cooking Oil"
+      },
+      "spices": {
+        "url": "https://images.unsplash.com/photo-1721934081798-34c4488fdd12",
+        "alt": "Assorted Spices"
+      }
+    },
+    "hero": {
+      "url": "https://images.unsplash.com/photo-1734255074937-4b446b8dcf18",
+      "alt": "Authentic Nigerian Market Scene"
+    },
+    "placeholders": {
+      "product": "https://images.unsplash.com/photo-1613758235256-43a7bdc21d82"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. SETUP: Install 'lucide-react' for icons. Add the Google Fonts link to public/index.html.",
+    "2. TAILWIND: Update tailwind.config.js to include the custom colors (Nigerian Forest, Terracotta, Bone White).",
+    "3. LAYOUT: Implement a 'MobileShell' component that handles the bottom navigation on mobile and top nav on desktop.",
+    "4. HOME PAGE: Create a 'CategoryBento' component using the provided category images. Make it visually striking.",
+    "5. PRODUCT CARD: Design a 'ProductCard' that emphasizes the Image and Price. The 'Add to Cart' button should be prominent.",
+    "6. CHECKOUT: Keep the checkout flow extremely simple. Step 1: Cart -> Step 2: Pickup/Delivery -> Step 3: Payment Instructions.",
+    "7. ADMIN: Use a clean, dense table layout for the Admin Dashboard. Use Shadcn 'Table' component.",
+    "8. AUTH: Design a clean Login screen with a large phone number input. Use the 'Nigerian Forest' color for the 'Send OTP' button.",
+    "9. UNIVERSAL: Ensure all text has sufficient contrast against the 'Bone White' background. Use #1A202C for main text.",
+    "10. TESTING: Add data-testid to all interactive elements (buttons, inputs, links)."
+  ],
+  "universal_guidelines": [
+    "Avoid generic 'AI slop' designs. Use the specified textures and colors to give it soul.",
+    "Do not use gradients for the primary background. Use the solid 'Bone White' color.",
+    "Ensure touch targets are at least 44px high for mobile users.",
+    "Use 'sonner' for all toast notifications (e.g., 'Added to cart').",
+    "Respect the 'Anti-Pattern' rules: No center-everything, no purple/teal generic buttons."
+  ]
+}
