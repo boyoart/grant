@@ -126,7 +126,7 @@ const CheckoutPage = () => {
     }
   };
 
-  if (loadingData) {
+  if (!isLoaded || loadingData) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
         <div className="animate-spin w-8 h-8 border-4 border-emerald-800 border-t-transparent rounded-full mx-auto"></div>
