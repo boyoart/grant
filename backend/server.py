@@ -538,7 +538,7 @@ async def get_stock_logs(product_id: Optional[str] = None, user: dict = Depends(
     if product_id:
         query["product_id"] = product_id
     logs = await db.stock_logs.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
-    return [serialize_doc(l) for l in logs]
+    return [serialize_doc(log) for log in logs]
 
 @api_router.get("/admin/stock/low")
 async def get_low_stock_products(user: dict = Depends(get_admin_user)):
