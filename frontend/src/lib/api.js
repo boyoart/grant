@@ -29,8 +29,9 @@ export const updateCategory = (id, data) => api.put(`/admin/categories/${id}`, d
 export const deleteCategory = (id) => api.delete(`/admin/categories/${id}`);
 
 // Products
-export const getProducts = (categoryId) => 
-  api.get("/products", { params: categoryId ? { category_id: categoryId } : {} });
+export const getProducts = (categoryId, search) => 
+  api.get("/products", { params: { ...(categoryId && { category_id: categoryId }), ...(search && { search }) } });
+export const searchProducts = (query) => api.get(`/products/search/${query}`);
 export const getProduct = (id) => api.get(`/products/${id}`);
 export const adminGetProducts = () => api.get("/admin/products");
 export const createProduct = (data) => api.post("/admin/products", data);
