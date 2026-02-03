@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
-  const { items, getSubtotal, clearCart } = useCart();
+  const { items, getSubtotal, clearCart, isLoaded } = useCart();
   const { customer, isCustomer } = useAuth();
   
   const [fulfillmentType, setFulfillmentType] = useState("pickup");
@@ -33,6 +33,9 @@ const CheckoutPage = () => {
   const [deliveryNote, setDeliveryNote] = useState("");
 
   useEffect(() => {
+    // Wait for cart to be loaded before checking if empty
+    if (!isLoaded) return;
+    
     if (items.length === 0) {
       navigate("/cart");
       return;
