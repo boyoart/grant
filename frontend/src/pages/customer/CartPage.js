@@ -7,9 +7,19 @@ import { useCart } from "../../context/CartContext";
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeItem, getSubtotal, clearCart } = useCart();
+  const { items, updateQuantity, removeItem, getSubtotal, clearCart, isLoaded } = useCart();
 
   const subtotal = getSubtotal();
+
+  // Show loading while cart is being loaded from localStorage
+  if (!isLoaded) {
+    return (
+      <div className="container mx-auto px-4 py-12 text-center">
+        <div className="animate-spin w-8 h-8 border-4 border-emerald-800 border-t-transparent rounded-full mx-auto"></div>
+        <p className="mt-4 text-stone-500">Loading cart...</p>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
