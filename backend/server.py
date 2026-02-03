@@ -245,6 +245,7 @@ class SettingsUpdate(BaseModel):
     sms_payment_confirmed: Optional[str] = None
     sms_ready_pickup: Optional[str] = None
     sms_out_for_delivery: Optional[str] = None
+    sms_delivered: Optional[str] = None
 
 # ==================== HELPER FUNCTIONS ====================
 
