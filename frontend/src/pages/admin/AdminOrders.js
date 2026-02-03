@@ -225,6 +225,40 @@ const AdminOrders = () => {
                 </div>
               </div>
 
+              {/* Payment Proof Section */}
+              <div>
+                <h3 className="font-semibold text-stone-800 mb-2">Payment Proof</h3>
+                {selectedOrder.payment_proof_url ? (
+                  <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+                    <div className="flex items-center gap-3">
+                      {selectedOrder.payment_proof_url.endsWith(".pdf") ? (
+                        <FileText className="w-8 h-8 text-emerald-600" />
+                      ) : (
+                        <ImageIcon className="w-8 h-8 text-emerald-600" />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium text-emerald-800">Payment proof uploaded</p>
+                        <p className="text-sm text-emerald-600">Customer has submitted proof of payment</p>
+                      </div>
+                      <a
+                        href={`${process.env.REACT_APP_BACKEND_URL}${selectedOrder.payment_proof_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-emerald-700 hover:text-emerald-900"
+                        data-testid="view-payment-proof"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                    <p className="text-amber-700 text-sm">No payment proof uploaded yet</p>
+                  </div>
+                )}
+              </div>
+
               {nextStatuses.length > 0 && (
                 <div className="border-t border-stone-200 pt-6">
                   <h3 className="font-semibold text-stone-800 mb-4">Update Status</h3>
