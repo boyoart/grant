@@ -169,6 +169,74 @@ const OrderConfirmationPage = () => {
             </div>
           </div>
           <p className="text-sm text-stone-500 mt-4 text-center">We'll confirm once payment is verified.</p>
+          
+          {/* Payment Proof Upload */}
+          <div className="mt-6 pt-6 border-t border-stone-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                <Upload className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-stone-800">Upload Payment Proof</h3>
+                <p className="text-sm text-stone-500">Screenshot or PDF of your transfer</p>
+              </div>
+            </div>
+            
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/jpeg,image/png,image/jpg,application/pdf"
+              className="hidden"
+              data-testid="payment-proof-input"
+            />
+            
+            {order.payment_proof_url ? (
+              <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+                <div className="flex items-center gap-3">
+                  {order.payment_proof_url.endsWith(".pdf") ? (
+                    <FileText className="w-8 h-8 text-emerald-600" />
+                  ) : (
+                    <Image className="w-8 h-8 text-emerald-600" />
+                  )}
+                  <div className="flex-1">
+                    <p className="font-medium text-emerald-800">Payment proof uploaded</p>
+                    <p className="text-sm text-emerald-600">We'll verify your payment shortly</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="border-emerald-300 text-emerald-700"
+                    data-testid="replace-proof-btn"
+                  >
+                    Replace
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full bg-emerald-800 hover:bg-emerald-900 text-white h-12"
+                data-testid="upload-proof-btn"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Payment Proof
+                  </>
+                )}
+              </Button>
+            )}
+            <p className="text-xs text-stone-400 mt-2 text-center">Accepted: JPG, PNG, PDF (max 5MB)</p>
+          </div>
         </Card>
       )}
 
