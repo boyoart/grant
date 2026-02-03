@@ -201,7 +201,7 @@ const OrderConfirmationPage = () => {
                   )}
                   <div className="flex-1">
                     <p className="font-medium text-emerald-800">Payment proof uploaded</p>
-                    <p className="text-sm text-emerald-600">We'll verify your payment shortly</p>
+                    <p className="text-sm text-emerald-600">We&apos;ll verify your payment shortly</p>
                   </div>
                   <Button
                     variant="outline"
