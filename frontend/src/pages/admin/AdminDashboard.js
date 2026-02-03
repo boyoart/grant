@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Package, AlertTriangle, TrendingUp, Clock, ArrowRight, ShoppingBag, Truck } from "lucide-react";
 import { getDashboardStats, adminGetOrders, getLowStockProducts } from "../../lib/api";
@@ -17,11 +17,9 @@ const AdminDashboard = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [statsRes, ordersRes, lowStockRes] = await Promise.all([
-          getDashboardStats(),
-          adminGetOrders(),
-          getLowStockProducts()
-        ]);
+        const statsRes = await getDashboardStats();
+        const ordersRes = await adminGetOrders();
+        const lowStockRes = await getLowStockProducts();
         setStats(statsRes.data);
         setRecentOrders(ordersRes.data.slice(0, 5));
         setLowStockProducts(lowStockRes.data);
@@ -39,73 +37,69 @@ const AdminDashboard = () => {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
+          <Skeleton className="h-28 rounded-xl" />
+          <Skeleton className="h-28 rounded-xl" />
+          <Skeleton className="h-28 rounded-xl" />
+          <Skeleton className="h-28 rounded-xl" />
         </div>
         <Skeleton className="h-96 rounded-xl" />
       </div>
     );
   }
 
-  const statCards = [
-    {
-      label: "Pending Payment",
-      value: stats?.orders?.pending_payment || 0,
-      icon: Clock,
-      color: "bg-amber-500",
-      link: "/admin/orders?status=pending_payment"
-    },
-    {
-      label: "Ready/Out for Delivery",
-      value: (stats?.orders?.ready_for_pickup || 0) + (stats?.orders?.out_for_delivery || 0),
-      icon: Truck,
-      color: "bg-blue-500",
-      link: "/admin/orders"
-    },
-    {
-      label: "Today's Orders",
-      value: stats?.today_orders || 0,
-      icon: Package,
-      color: "bg-green-500",
-      link: "/admin/orders"
-    },
-    {
-      label: "Total Revenue",
-      value: formatCurrency(stats?.total_revenue || 0),
-      icon: TrendingUp,
-      color: "bg-[#1B4D3E]",
-      link: "/admin/orders"
-    }
-  ];
+  const pendingCount = stats && stats.orders ? stats.orders.pending_payment : 0;
+  const readyCount = stats && stats.orders ? (stats.orders.ready_for_pickup || 0) + (stats.orders.out_for_delivery || 0) : 0;
+  const todayCount = stats ? stats.today_orders : 0;
+  const totalRevenue = stats ? stats.total_revenue : 0;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-['Playfair_Display'] text-2xl md:text-3xl font-bold text-[#1A202C]">
-          Dashboard
-        </h1>
+        <h1 className="font-serif text-2xl md:text-3xl font-bold text-stone-800">Dashboard</h1>
         <p className="text-sm text-stone-500">
           {new Date().toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, index) => (
-          <Link key={index} to={stat.link}>
-            <Card className="p-4 bg-white border border-stone-200 hover:shadow-md transition-shadow rounded-xl">
-              <div className="flex items-start justify-between mb-3">
-                <div className={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center`}>
-                  <stat.icon className="w-5 h-5 text-white" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-[#1A202C]">{stat.value}</p>
-              <p className="text-sm text-stone-500">{stat.label}</p>
-            </Card>
-          </Link>
-        ))}
+        <Link to="/admin/orders?status=pending_payment">
+          <Card className="p-4 bg-white border border-stone-200 hover:shadow-md transition-shadow rounded-xl">
+            <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center mb-3">
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+            <p className="text-2xl font-bold text-stone-800">{pendingCount}</p>
+            <p className="text-sm text-stone-500">Pending Payment</p>
+          </Card>
+        </Link>
+        <Link to="/admin/orders">
+          <Card className="p-4 bg-white border border-stone-200 hover:shadow-md transition-shadow rounded-xl">
+            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mb-3">
+              <Truck className="w-5 h-5 text-white" />
+            </div>
+            <p className="text-2xl font-bold text-stone-800">{readyCount}</p>
+            <p className="text-sm text-stone-500">Ready/Out for Delivery</p>
+          </Card>
+        </Link>
+        <Link to="/admin/orders">
+          <Card className="p-4 bg-white border border-stone-200 hover:shadow-md transition-shadow rounded-xl">
+            <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mb-3">
+              <Package className="w-5 h-5 text-white" />
+            </div>
+            <p className="text-2xl font-bold text-stone-800">{todayCount}</p>
+            <p className="text-sm text-stone-500">Today's Orders</p>
+          </Card>
+        </Link>
+        <Link to="/admin/orders">
+          <Card className="p-4 bg-white border border-stone-200 hover:shadow-md transition-shadow rounded-xl">
+            <div className="w-10 h-10 bg-emerald-800 rounded-lg flex items-center justify-center mb-3">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
+            <p className="text-2xl font-bold text-stone-800">{formatCurrency(totalRevenue)}</p>
+            <p className="text-sm text-stone-500">Total Revenue</p>
+          </Card>
+        </Link>
       </div>
 
-      {/* Low Stock Alert */}
       {lowStockProducts.length > 0 && (
         <Card className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
           <div className="flex items-center gap-3 mb-3">
@@ -122,21 +116,15 @@ const AdminDashboard = () => {
                 {product.name} ({product.stock_quantity} left)
               </Link>
             ))}
-            {lowStockProducts.length > 5 && (
-              <span className="px-3 py-1 text-amber-600 text-sm">
-                +{lowStockProducts.length - 5} more
-              </span>
-            )}
           </div>
         </Card>
       )}
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent Orders */}
         <Card className="p-6 bg-white border border-stone-200 rounded-xl">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-lg text-[#1A202C]">Recent Orders</h2>
-            <Link to="/admin/orders" className="text-sm text-[#1B4D3E] font-medium flex items-center gap-1 hover:underline">
+            <h2 className="font-semibold text-lg text-stone-800">Recent Orders</h2>
+            <Link to="/admin/orders" className="text-sm text-emerald-800 font-medium flex items-center gap-1 hover:underline">
               View All <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -153,15 +141,12 @@ const AdminDashboard = () => {
                   key={order.id} 
                   to="/admin/orders"
                   className="flex items-center justify-between p-3 bg-stone-50 rounded-lg hover:bg-stone-100 transition-colors"
-                  data-testid={`dashboard-order-${order.order_number}`}
                 >
                   <div>
-                    <p className="font-medium text-[#1A202C]">{order.order_number}</p>
-                    <p className="text-sm text-stone-500">
-                      {order.customer_name} • {formatCurrency(order.total)}
-                    </p>
+                    <p className="font-medium text-stone-800">{order.order_number}</p>
+                    <p className="text-sm text-stone-500">{order.customer_name} - {formatCurrency(order.total)}</p>
                   </div>
-                  <Badge className={`${getStatusColor(order.status)} text-xs`}>
+                  <Badge className={getStatusColor(order.status) + " text-xs"}>
                     {getStatusLabel(order.status)}
                   </Badge>
                 </Link>
@@ -170,27 +155,51 @@ const AdminDashboard = () => {
           )}
         </Card>
 
-        {/* Order Status Summary */}
         <Card className="p-6 bg-white border border-stone-200 rounded-xl">
-          <h2 className="font-semibold text-lg text-[#1A202C] mb-4">Order Status Summary</h2>
-          
+          <h2 className="font-semibold text-lg text-stone-800 mb-4">Order Status Summary</h2>
           <div className="space-y-3">
-            {[
-              { status: "pending_payment", label: "Pending Payment", count: stats?.orders?.pending_payment },
-              { status: "confirmed", label: "Confirmed", count: stats?.orders?.confirmed },
-              { status: "packing", label: "Packing", count: stats?.orders?.packing },
-              { status: "ready_for_pickup", label: "Ready for Pickup", count: stats?.orders?.ready_for_pickup },
-              { status: "out_for_delivery", label: "Out for Delivery", count: stats?.orders?.out_for_delivery },
-              { status: "completed", label: "Completed", count: stats?.orders?.completed }
-            ].map(({ status, label, count }) => (
-              <div key={status} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${getStatusColor(status).split(' ')[0]}`} />
-                  <span className="text-stone-600">{label}</span>
-                </div>
-                <span className="font-semibold text-[#1A202C]">{count || 0}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-amber-100" />
+                <span className="text-stone-600">Pending Payment</span>
               </div>
-            ))}
+              <span className="font-semibold text-stone-800">{stats && stats.orders ? stats.orders.pending_payment || 0 : 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-blue-100" />
+                <span className="text-stone-600">Confirmed</span>
+              </div>
+              <span className="font-semibold text-stone-800">{stats && stats.orders ? stats.orders.confirmed || 0 : 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-purple-100" />
+                <span className="text-stone-600">Packing</span>
+              </div>
+              <span className="font-semibold text-stone-800">{stats && stats.orders ? stats.orders.packing || 0 : 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-green-100" />
+                <span className="text-stone-600">Ready for Pickup</span>
+              </div>
+              <span className="font-semibold text-stone-800">{stats && stats.orders ? stats.orders.ready_for_pickup || 0 : 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-cyan-100" />
+                <span className="text-stone-600">Out for Delivery</span>
+              </div>
+              <span className="font-semibold text-stone-800">{stats && stats.orders ? stats.orders.out_for_delivery || 0 : 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-emerald-100" />
+                <span className="text-stone-600">Completed</span>
+              </div>
+              <span className="font-semibold text-stone-800">{stats && stats.orders ? stats.orders.completed || 0 : 0}</span>
+            </div>
           </div>
         </Card>
       </div>
