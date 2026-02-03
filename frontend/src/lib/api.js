@@ -56,7 +56,7 @@ export const createOrder = (data) => api.post("/orders", data);
 export const getMyOrders = () => api.get("/orders/my");
 export const getOrder = (orderNumber) => api.get(`/orders/${orderNumber}`);
 export const adminGetOrders = (status) => 
-  api.get("/admin/orders", { params: status ? { status } : {} });
+  api.get("/admin/orders", { params: status ? { status_filter: status } : {} });
 export const updateOrderStatus = (id, data) => api.put(`/admin/orders/${id}/status`, data);
 
 // Payment Proof Upload
