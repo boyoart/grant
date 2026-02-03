@@ -233,6 +233,7 @@ class Settings(BaseModel):
     sms_payment_confirmed: str = "Your FoodNova order {order_id} payment has been confirmed. We're preparing your order."
     sms_ready_pickup: str = "Your FoodNova order {order_id} is ready for pickup at our store."
     sms_out_for_delivery: str = "Your FoodNova order {order_id} is out for delivery. Rider: {logistics_name} ({logistics_phone})"
+    sms_delivered: str = "Your FoodNova order {order_id} has been delivered. Thank you for shopping with us!"
 
 class SettingsUpdate(BaseModel):
     store_name: Optional[str] = None
