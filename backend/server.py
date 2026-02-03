@@ -741,6 +741,8 @@ async def update_order_status(order_id: str, data: OrderStatusUpdate, user: dict
                 logistics_name=data.logistics_name or "",
                 logistics_phone=data.logistics_phone or ""
             )
+        elif new_status in ["delivered", "picked_up"]:
+            message = settings.get('sms_delivered', f"Your FoodNova order {order['order_number']} has been delivered. Thank you for shopping with us!")
         
         if message:
             send_sms(order['customer_phone'], message)
