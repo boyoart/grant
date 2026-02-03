@@ -129,7 +129,15 @@ const MyOrdersPage = () => {
                   {formatCurrency(order.total)}
                 </p>
               </div>
-              <ArrowRight className="w-5 h-5 text-stone-400" />
+              <div className="flex items-center gap-2">
+                {order.status === "pending_payment" && !order.payment_proof_url && (
+                  <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
+                    <Upload className="w-3 h-3" />
+                    Upload Proof
+                  </span>
+                )}
+                <ArrowRight className="w-5 h-5 text-stone-400" />
+              </div>
             </div>
           </Card>
         ))}
