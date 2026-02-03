@@ -31,10 +31,14 @@ const CheckoutPage = () => {
   const [deliveryZoneId, setDeliveryZoneId] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryNote, setDeliveryNote] = useState("");
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
 
   useEffect(() => {
     // Wait for cart to be loaded before checking if empty
     if (!isLoaded) return;
+    
+    // Don't redirect if we just submitted an order
+    if (orderSubmitted) return;
     
     if (items.length === 0) {
       navigate("/cart");
