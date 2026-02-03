@@ -59,6 +59,16 @@ export const adminGetOrders = (status) =>
   api.get("/admin/orders", { params: status ? { status } : {} });
 export const updateOrderStatus = (id, data) => api.put(`/admin/orders/${id}/status`, data);
 
+// Payment Proof Upload
+export const uploadPaymentProof = (orderId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post(`/orders/${orderId}/payment-proof`, formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
+};
+export const getPaymentProof = (orderId) => api.get(`/orders/${orderId}/payment-proof`);
+
 // Settings
 export const getSettings = () => api.get("/settings");
 export const adminGetSettings = () => api.get("/admin/settings");
