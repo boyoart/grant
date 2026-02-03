@@ -429,11 +429,23 @@ async def delete_category(category_id: str, user: dict = Depends(get_admin_user)
 # ==================== PRODUCT ENDPOINTS ====================
 
 @api_router.get("/products")
-async def get_products(category_id: Optional[str] = None):
+async def get_products(category_id: Optional[str] = None, search: Optional[str] = None):
     query = {"is_active": True}
     if category_id:
         query["category_id"] = category_id
+    if search:
+        # Case-insensitive search on name
+        query["name"] = {"$regex": search, "$options": "i"}
     products = await db.products.find(query, {"_id": 0}).to_list(500)
+    return [serialize_doc(p) for p in products]
+
+@api_router.get("/products/search/{query}")
+async def search_products(query: str):
+    """Search products by name"""
+    products = await db.products.find(
+        {"is_active": True, "name": {"$regex": query, "$options": "i"}},
+        {"_id": 0}
+    ).to_list(50)
     return [serialize_doc(p) for p in products]
 
 @api_router.get("/products/{product_id}")
