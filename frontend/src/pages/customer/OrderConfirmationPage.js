@@ -168,7 +168,7 @@ const OrderConfirmationPage = () => {
               </Button>
             </div>
           </div>
-          <p className="text-sm text-stone-500 mt-4 text-center">We'll confirm once payment is verified.</p>
+          <p className="text-sm text-stone-500 mt-4 text-center">We&apos;ll confirm once payment is verified.</p>
           
           {/* Payment Proof Upload */}
           <div className="mt-6 pt-6 border-t border-stone-200">

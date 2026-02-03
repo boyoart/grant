@@ -163,7 +163,7 @@ const HomePage = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="p-4 text-center text-stone-500">No products found for "{searchQuery}"</div>
+                    <div className="p-4 text-center text-stone-500">No products found for &quot;{searchQuery}&quot;</div>
                   )}
                 </div>
               )}
