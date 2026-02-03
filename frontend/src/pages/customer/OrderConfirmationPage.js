@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Check, Copy, Clock, Store, Truck, CreditCard } from "lucide-react";
 import { getOrder, getSettings } from "../../lib/api";
@@ -9,83 +9,14 @@ import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
 import { toast } from "sonner";
 
-function OrderItem({ item }) {
-  return (
-    <div className="flex justify-between text-sm py-2 border-b border-stone-100">
-      <span className="text-stone-600">{item.quantity}x {item.product_name}</span>
-      <span className="font-medium text-stone-800">{formatCurrency(item.price * item.quantity)}</span>
-    </div>
-  );
-}
-
-function PaymentCard({ order, settings, onCopy }) {
-  const bankName = settings.bank_name || "First Bank";
-  const accountNum = settings.account_number || "3012345678";
-  const accountName = settings.account_name || "FoodNova Enterprises";
-
-  return (
-    <Card className="p-6 bg-white border-2 border-amber-200 rounded-2xl mb-6">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-          <CreditCard className="w-5 h-5 text-amber-600" />
-        </div>
-        <h2 className="font-semibold text-lg text-stone-800">Payment Instructions</h2>
-      </div>
-
-      <div className="bg-amber-50 rounded-xl p-4 mb-4">
-        <p className="text-amber-800 text-sm">Transfer to the account below using your Order ID as reference.</p>
-      </div>
-
-      <div className="space-y-4">
-        <div className="p-4 bg-stone-50 rounded-xl">
-          <p className="text-sm text-stone-500">Bank Name</p>
-          <p className="font-semibold text-stone-800">{bankName}</p>
-        </div>
-
-        <div className="flex justify-between items-center p-4 bg-stone-50 rounded-xl">
-          <div>
-            <p className="text-sm text-stone-500">Account Number</p>
-            <p className="font-semibold text-stone-800 text-lg">{accountNum}</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => onCopy(accountNum)} data-testid="copy-account-btn">
-            <Copy className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="p-4 bg-stone-50 rounded-xl">
-          <p className="text-sm text-stone-500">Account Name</p>
-          <p className="font-semibold text-stone-800">{accountName}</p>
-        </div>
-
-        <div className="p-4 bg-emerald-50 rounded-xl border-2 border-emerald-200">
-          <p className="text-sm text-emerald-700">Amount to Pay</p>
-          <p className="font-bold text-emerald-800 text-2xl">{formatCurrency(order.total)}</p>
-        </div>
-
-        <div className="flex justify-between items-center p-4 bg-orange-50 rounded-xl border-2 border-orange-200">
-          <div>
-            <p className="text-sm text-orange-700">Transfer Reference</p>
-            <p className="font-bold text-orange-800 text-xl">{order.order_number}</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => onCopy(order.order_number)} data-testid="copy-order-btn">
-            <Copy className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-      <p className="text-sm text-stone-500 mt-4 text-center">We'll confirm once payment is verified.</p>
-    </Card>
-  );
-}
-
-function OrderConfirmationPage() {
-  const params = useParams();
-  const orderNumber = params.orderNumber;
+const OrderConfirmationPage = () => {
+  const { orderNumber } = useParams();
   const [order, setOrder] = useState(null);
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
+    const loadData = async () => {
       try {
         const [orderRes, settingsRes] = await Promise.all([
           getOrder(orderNumber),
@@ -98,14 +29,14 @@ function OrderConfirmationPage() {
       } finally {
         setLoading(false);
       }
-    }
-    load();
+    };
+    loadData();
   }, [orderNumber]);
 
-  function copyText(text) {
+  const copyText = (text) => {
     navigator.clipboard.writeText(text);
     toast.success("Copied!");
-  }
+  };
 
   if (loading) {
     return (
@@ -127,6 +58,10 @@ function OrderConfirmationPage() {
 
   const isPending = order.status === "pending_payment";
   const isPickup = order.fulfillment_type === "pickup";
+  const bankName = settings?.bank_name || "First Bank";
+  const accountNum = settings?.account_number || "3012345678";
+  const accountName = settings?.account_name || "FoodNova Enterprises";
+  const items = order.items || [];
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
@@ -152,7 +87,58 @@ function OrderConfirmationPage() {
         </Card>
       )}
 
-      {isPending && settings && <PaymentCard order={order} settings={settings} onCopy={copyText} />}
+      {isPending && settings && (
+        <Card className="p-6 bg-white border-2 border-amber-200 rounded-2xl mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-amber-600" />
+            </div>
+            <h2 className="font-semibold text-lg text-stone-800">Payment Instructions</h2>
+          </div>
+
+          <div className="bg-amber-50 rounded-xl p-4 mb-4">
+            <p className="text-amber-800 text-sm">Transfer to the account below using your Order ID as reference.</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="p-4 bg-stone-50 rounded-xl">
+              <p className="text-sm text-stone-500">Bank Name</p>
+              <p className="font-semibold text-stone-800">{bankName}</p>
+            </div>
+
+            <div className="flex justify-between items-center p-4 bg-stone-50 rounded-xl">
+              <div>
+                <p className="text-sm text-stone-500">Account Number</p>
+                <p className="font-semibold text-stone-800 text-lg">{accountNum}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => copyText(accountNum)} data-testid="copy-account-btn">
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <div className="p-4 bg-stone-50 rounded-xl">
+              <p className="text-sm text-stone-500">Account Name</p>
+              <p className="font-semibold text-stone-800">{accountName}</p>
+            </div>
+
+            <div className="p-4 bg-emerald-50 rounded-xl border-2 border-emerald-200">
+              <p className="text-sm text-emerald-700">Amount to Pay</p>
+              <p className="font-bold text-emerald-800 text-2xl">{formatCurrency(order.total)}</p>
+            </div>
+
+            <div className="flex justify-between items-center p-4 bg-orange-50 rounded-xl border-2 border-orange-200">
+              <div>
+                <p className="text-sm text-orange-700">Transfer Reference</p>
+                <p className="font-bold text-orange-800 text-xl">{order.order_number}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => copyText(order.order_number)} data-testid="copy-order-btn">
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+          <p className="text-sm text-stone-500 mt-4 text-center">We'll confirm once payment is verified.</p>
+        </Card>
+      )}
 
       <Card className="p-6 bg-white border border-stone-200 rounded-2xl mb-6">
         <h2 className="font-semibold text-lg text-stone-800 mb-4">Order Details</h2>
@@ -178,7 +164,12 @@ function OrderConfirmationPage() {
         </div>
 
         <div className="space-y-1 mb-4">
-          {order.items.map((item, i) => <OrderItem key={i} item={item} />)}
+          {items.map((item, i) => (
+            <div key={i} className="flex justify-between text-sm py-2 border-b border-stone-100">
+              <span className="text-stone-600">{item.quantity}x {item.product_name}</span>
+              <span className="font-medium text-stone-800">{formatCurrency(item.price * item.quantity)}</span>
+            </div>
+          ))}
         </div>
 
         <div className="border-t border-stone-200 pt-4 space-y-2">
@@ -217,6 +208,6 @@ function OrderConfirmationPage() {
       </div>
     </div>
   );
-}
+};
 
 export default OrderConfirmationPage;

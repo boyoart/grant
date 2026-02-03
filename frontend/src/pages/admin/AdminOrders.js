@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, Eye, Truck, Store } from "lucide-react";
 import { adminGetOrders, updateOrderStatus } from "../../lib/api";
@@ -14,167 +14,7 @@ import { Textarea } from "../../components/ui/textarea";
 import { Skeleton } from "../../components/ui/skeleton";
 import { toast } from "sonner";
 
-function OrderRow({ order, onView }) {
-  const isPickup = order.fulfillment_type === "pickup";
-  return (
-    <tr className="border-b border-stone-100 hover:bg-stone-50" data-testid={`order-row-${order.order_number}`}>
-      <td className="px-4 py-3">
-        <p className="font-medium text-stone-800">{order.order_number}</p>
-        <p className="text-xs text-stone-500">{order.items.length} items</p>
-      </td>
-      <td className="px-4 py-3">
-        <p className="text-stone-800">{order.customer_name}</p>
-        <p className="text-xs text-stone-500">{order.customer_phone}</p>
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          {isPickup ? <Store className="w-4 h-4 text-stone-500" /> : <Truck className="w-4 h-4 text-stone-500" />}
-          <span className="text-sm">{isPickup ? "Pickup" : "Delivery"}</span>
-        </div>
-      </td>
-      <td className="px-4 py-3 font-semibold text-emerald-800">{formatCurrency(order.total)}</td>
-      <td className="px-4 py-3"><Badge className={getStatusColor(order.status)}>{getStatusLabel(order.status)}</Badge></td>
-      <td className="px-4 py-3 text-sm text-stone-500">{formatDate(order.created_at)}</td>
-      <td className="px-4 py-3">
-        <Button variant="outline" size="sm" onClick={() => onView(order)} className="text-emerald-800 border-emerald-800" data-testid={`view-order-${order.order_number}`}>
-          <Eye className="w-4 h-4 mr-1" />View
-        </Button>
-      </td>
-    </tr>
-  );
-}
-
-function OrderDetailModal({ order, show, onClose, onUpdate }) {
-  const [newStatus, setNewStatus] = useState("");
-  const [riderName, setRiderName] = useState("");
-  const [riderPhone, setRiderPhone] = useState("");
-  const [notes, setNotes] = useState("");
-  const [updating, setUpdating] = useState(false);
-
-  useEffect(() => {
-    if (order) {
-      setRiderName(order.logistics_name || "");
-      setRiderPhone(order.logistics_phone || "");
-      setNotes(order.admin_notes || "");
-      setNewStatus("");
-    }
-  }, [order]);
-
-  async function handleUpdate() {
-    if (!newStatus) { toast.error("Select a status"); return; }
-    setUpdating(true);
-    try {
-      await updateOrderStatus(order.id, { status: newStatus, logistics_name: riderName, logistics_phone: riderPhone, admin_notes: notes });
-      toast.success("Status updated");
-      onClose();
-      onUpdate();
-    } catch (e) {
-      toast.error("Update failed");
-    } finally {
-      setUpdating(false);
-    }
-  }
-
-  if (!order) return null;
-  const nextStatuses = getNextStatuses(order.status, order.fulfillment_type);
-  const isPickup = order.fulfillment_type === "pickup";
-
-  return (
-    <Dialog open={show} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle className="font-serif text-xl">Order {order.order_number}</DialogTitle></DialogHeader>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between p-4 bg-stone-50 rounded-lg">
-            <div>
-              <p className="text-sm text-stone-500">Status</p>
-              <Badge className={getStatusColor(order.status)}>{getStatusLabel(order.status)}</Badge>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-stone-500">Total</p>
-              <p className="text-xl font-bold text-emerald-800">{formatCurrency(order.total)}</p>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-stone-800 mb-2">Customer</h3>
-            <p>{order.customer_name}</p>
-            <p className="text-stone-500">{order.customer_phone}</p>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-stone-800 mb-2">Fulfillment</h3>
-            {isPickup ? (
-              <div className="flex items-center gap-2">
-                <Store className="w-5 h-5 text-emerald-800" />
-                <span>Pickup {order.pickup_time ? `at ${order.pickup_time}` : ""}</span>
-              </div>
-            ) : (
-              <div className="flex items-start gap-2">
-                <Truck className="w-5 h-5 text-emerald-800" />
-                <div>
-                  <p>Delivery to {order.delivery_zone_name}</p>
-                  <p className="text-sm text-stone-500">{order.delivery_address}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-stone-800 mb-2">Items</h3>
-            {order.items.map((item, i) => (
-              <div key={i} className="flex justify-between py-2 border-b border-stone-100">
-                <span>{item.quantity}x {item.product_name}</span>
-                <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
-              </div>
-            ))}
-            <div className="flex justify-between pt-2 font-bold text-lg">
-              <span>Total</span>
-              <span className="text-emerald-800">{formatCurrency(order.total)}</span>
-            </div>
-          </div>
-
-          {nextStatuses.length > 0 && (
-            <div className="border-t border-stone-200 pt-6">
-              <h3 className="font-semibold text-stone-800 mb-4">Update Status</h3>
-              <div className="space-y-4">
-                <div>
-                  <Label>New Status</Label>
-                  <Select value={newStatus} onValueChange={setNewStatus}>
-                    <SelectTrigger className="mt-1" data-testid="update-status-select"><SelectValue placeholder="Select status" /></SelectTrigger>
-                    <SelectContent>
-                      {nextStatuses.map(s => <SelectItem key={s} value={s}>{getStatusLabel(s)}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {newStatus === "out_for_delivery" && (
-                  <>
-                    <div>
-                      <Label>Rider Name</Label>
-                      <Input value={riderName} onChange={e => setRiderName(e.target.value)} placeholder="Rider name" className="mt-1" data-testid="logistics-name" />
-                    </div>
-                    <div>
-                      <Label>Rider Phone</Label>
-                      <Input value={riderPhone} onChange={e => setRiderPhone(e.target.value)} placeholder="Rider phone" className="mt-1" data-testid="logistics-phone" />
-                    </div>
-                  </>
-                )}
-                <div>
-                  <Label>Notes</Label>
-                  <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional notes" className="mt-1" rows={2} data-testid="admin-notes" />
-                </div>
-                <Button onClick={handleUpdate} disabled={updating || !newStatus} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white" data-testid="update-status-btn">
-                  {updating ? "Updating..." : "Update Status"}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function AdminOrders() {
+const AdminOrders = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const statusFilter = searchParams.get("status") || "";
   const [orders, setOrders] = useState([]);
@@ -182,10 +22,15 @@ function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
+  const [riderName, setRiderName] = useState("");
+  const [riderPhone, setRiderPhone] = useState("");
+  const [notes, setNotes] = useState("");
 
   useEffect(() => { loadOrders(); }, []);
 
-  async function loadOrders() {
+  const loadOrders = async () => {
     try {
       const res = await adminGetOrders();
       setOrders(res.data);
@@ -194,23 +39,42 @@ function AdminOrders() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  function handleFilterChange(value) {
+  const handleFilterChange = (value) => {
     if (value === "all") { searchParams.delete("status"); }
     else { searchParams.set("status", value); }
     setSearchParams(searchParams);
-  }
+  };
 
-  function openModal(order) {
+  const openModal = (order) => {
     setSelectedOrder(order);
+    setNewStatus("");
+    setRiderName(order.logistics_name || "");
+    setRiderPhone(order.logistics_phone || "");
+    setNotes(order.admin_notes || "");
     setShowModal(true);
-  }
+  };
 
-  function closeModal() {
+  const closeModal = () => {
     setShowModal(false);
     setSelectedOrder(null);
-  }
+  };
+
+  const handleUpdate = async () => {
+    if (!newStatus) { toast.error("Select a status"); return; }
+    setUpdating(true);
+    try {
+      await updateOrderStatus(selectedOrder.id, { status: newStatus, logistics_name: riderName, logistics_phone: riderPhone, admin_notes: notes });
+      toast.success("Status updated");
+      closeModal();
+      loadOrders();
+    } catch (e) {
+      toast.error("Update failed");
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const filtered = orders.filter(o => {
     if (statusFilter && o.status !== statusFilter) return false;
@@ -224,6 +88,10 @@ function AdminOrders() {
   if (loading) {
     return (<div className="space-y-6"><Skeleton className="h-10 w-full max-w-md" /><Skeleton className="h-96 rounded-xl" /></div>);
   }
+
+  const orderItems = selectedOrder?.items || [];
+  const nextStatuses = selectedOrder ? getNextStatuses(selectedOrder.status, selectedOrder.fulfillment_type) : [];
+  const isPickup = selectedOrder?.fulfillment_type === "pickup";
 
   return (
     <div className="space-y-6">
@@ -268,16 +136,136 @@ function AdminOrders() {
               {filtered.length === 0 ? (
                 <tr><td colSpan={7} className="text-center py-12 text-stone-500">No orders</td></tr>
               ) : (
-                filtered.map(order => <OrderRow key={order.id} order={order} onView={openModal} />)
+                filtered.map(order => {
+                  const orderIsPickup = order.fulfillment_type === "pickup";
+                  return (
+                    <tr key={order.id} className="border-b border-stone-100 hover:bg-stone-50" data-testid={`order-row-${order.order_number}`}>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-stone-800">{order.order_number}</p>
+                        <p className="text-xs text-stone-500">{order.items.length} items</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-stone-800">{order.customer_name}</p>
+                        <p className="text-xs text-stone-500">{order.customer_phone}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {orderIsPickup ? <Store className="w-4 h-4 text-stone-500" /> : <Truck className="w-4 h-4 text-stone-500" />}
+                          <span className="text-sm">{orderIsPickup ? "Pickup" : "Delivery"}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-emerald-800">{formatCurrency(order.total)}</td>
+                      <td className="px-4 py-3"><Badge className={getStatusColor(order.status)}>{getStatusLabel(order.status)}</Badge></td>
+                      <td className="px-4 py-3 text-sm text-stone-500">{formatDate(order.created_at)}</td>
+                      <td className="px-4 py-3">
+                        <Button variant="outline" size="sm" onClick={() => openModal(order)} className="text-emerald-800 border-emerald-800" data-testid={`view-order-${order.order_number}`}>
+                          <Eye className="w-4 h-4 mr-1" />View
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </Card>
 
-      <OrderDetailModal order={selectedOrder} show={showModal} onClose={closeModal} onUpdate={loadOrders} />
+      <Dialog open={showModal} onOpenChange={closeModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-serif text-xl">Order {selectedOrder?.order_number}</DialogTitle></DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-stone-50 rounded-lg">
+                <div>
+                  <p className="text-sm text-stone-500">Status</p>
+                  <Badge className={getStatusColor(selectedOrder.status)}>{getStatusLabel(selectedOrder.status)}</Badge>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-stone-500">Total</p>
+                  <p className="text-xl font-bold text-emerald-800">{formatCurrency(selectedOrder.total)}</p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-stone-800 mb-2">Customer</h3>
+                <p>{selectedOrder.customer_name}</p>
+                <p className="text-stone-500">{selectedOrder.customer_phone}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-stone-800 mb-2">Fulfillment</h3>
+                {isPickup ? (
+                  <div className="flex items-center gap-2">
+                    <Store className="w-5 h-5 text-emerald-800" />
+                    <span>Pickup {selectedOrder.pickup_time ? `at ${selectedOrder.pickup_time}` : ""}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2">
+                    <Truck className="w-5 h-5 text-emerald-800" />
+                    <div>
+                      <p>Delivery to {selectedOrder.delivery_zone_name}</p>
+                      <p className="text-sm text-stone-500">{selectedOrder.delivery_address}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-stone-800 mb-2">Items</h3>
+                {orderItems.map((item, i) => (
+                  <div key={i} className="flex justify-between py-2 border-b border-stone-100">
+                    <span>{item.quantity}x {item.product_name}</span>
+                    <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between pt-2 font-bold text-lg">
+                  <span>Total</span>
+                  <span className="text-emerald-800">{formatCurrency(selectedOrder.total)}</span>
+                </div>
+              </div>
+
+              {nextStatuses.length > 0 && (
+                <div className="border-t border-stone-200 pt-6">
+                  <h3 className="font-semibold text-stone-800 mb-4">Update Status</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>New Status</Label>
+                      <Select value={newStatus} onValueChange={setNewStatus}>
+                        <SelectTrigger className="mt-1" data-testid="update-status-select"><SelectValue placeholder="Select status" /></SelectTrigger>
+                        <SelectContent>
+                          {nextStatuses.map(s => <SelectItem key={s} value={s}>{getStatusLabel(s)}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {newStatus === "out_for_delivery" && (
+                      <>
+                        <div>
+                          <Label>Rider Name</Label>
+                          <Input value={riderName} onChange={e => setRiderName(e.target.value)} placeholder="Rider name" className="mt-1" data-testid="logistics-name" />
+                        </div>
+                        <div>
+                          <Label>Rider Phone</Label>
+                          <Input value={riderPhone} onChange={e => setRiderPhone(e.target.value)} placeholder="Rider phone" className="mt-1" data-testid="logistics-phone" />
+                        </div>
+                      </>
+                    )}
+                    <div>
+                      <Label>Notes</Label>
+                      <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional notes" className="mt-1" rows={2} data-testid="admin-notes" />
+                    </div>
+                    <Button onClick={handleUpdate} disabled={updating || !newStatus} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white" data-testid="update-status-btn">
+                      {updating ? "Updating..." : "Update Status"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
+};
 
 export default AdminOrders;
