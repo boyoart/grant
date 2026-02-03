@@ -673,10 +673,10 @@ async def get_order(order_number: str):
     return serialize_doc(order)
 
 @api_router.get("/admin/orders")
-async def admin_get_orders(status: Optional[str] = None, user: dict = Depends(get_admin_user)):
+async def admin_get_orders(status_filter: Optional[str] = None, user: dict = Depends(get_admin_user)):
     query = {}
-    if status:
-        query["status"] = status
+    if status_filter:
+        query["status"] = status_filter
     orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
     return [serialize_doc(o) for o in orders]
 
