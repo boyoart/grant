@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Check, Copy, Clock, Store, Truck, CreditCard } from "lucide-react";
-import { getOrder, getSettings } from "../../lib/api";
+import { Check, Copy, Clock, Store, Truck, CreditCard, Upload, FileText, Image, Loader2 } from "lucide-react";
+import { getOrder, getSettings, uploadPaymentProof } from "../../lib/api";
 import { formatCurrency, formatDate, getStatusLabel, getStatusColor } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
