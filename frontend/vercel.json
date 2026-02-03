@@ -1,6 +1,6 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
-  "buildCommand": "npm run build",
+  "buildCommand": "npx craco build",
   "outputDirectory": "build",
   "framework": "create-react-app"
 }
