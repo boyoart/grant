@@ -748,13 +748,48 @@ async def update_order_status(order_id: str, data: OrderStatusUpdate, user: dict
     updated_order = await db.orders.find_one({"id": order_id}, {"_id": 0})
     return serialize_doc(updated_order)
 
-@api_router.post("/admin/orders/{order_id}/payment-proof")
-async def upload_payment_proof(order_id: str, payment_proof_url: str, user: dict = Depends(get_admin_user)):
+@api_router.post("/orders/{order_id}/payment-proof")
+async def upload_payment_proof(order_id: str, file: UploadFile = File(...)):
+    """Upload payment proof image or PDF for an order"""
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/jpg", "application/pdf"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Only JPG, PNG, and PDF files are allowed")
+    
+    # Validate file size (max 5MB)
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size must be less than 5MB")
+    
+    # Check order exists
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Save file
+    file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    filename = f"payment_proof_{order_id}_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}.{file_ext}"
+    file_path = UPLOAD_DIR / filename
+    
+    with open(file_path, "wb") as f:
+        f.write(contents)
+    
+    # Update order with payment proof URL
+    payment_proof_url = f"/api/uploads/{filename}"
     await db.orders.update_one(
         {"id": order_id},
         {"$set": {"payment_proof_url": payment_proof_url, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
-    return {"message": "Payment proof uploaded"}
+    
+    return {"message": "Payment proof uploaded", "payment_proof_url": payment_proof_url}
+
+@api_router.get("/orders/{order_id}/payment-proof")
+async def get_payment_proof(order_id: str):
+    """Get payment proof URL for an order"""
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0, "payment_proof_url": 1})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return {"payment_proof_url": order.get("payment_proof_url")}
 
 # ==================== SETTINGS ENDPOINTS ====================
 
@@ -940,6 +975,9 @@ async def seed_data():
 @api_router.get("/")
 async def root():
     return {"message": "FoodNova API", "version": "1.0.0"}
+
+# Serve uploaded files
+app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # Include router and middleware
 app.include_router(api_router)
