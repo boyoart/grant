@@ -64,7 +64,7 @@ const CheckoutPage = () => {
       }
     };
     loadData();
-  }, [items.length, navigate, customer, isLoaded]);
+  }, [items.length, navigate, customer, isLoaded, orderSubmitted]);
 
   const subtotal = getSubtotal();
   const selectedZone = deliveryZones.find(z => z.id === deliveryZoneId);
